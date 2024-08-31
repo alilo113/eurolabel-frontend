@@ -76,6 +76,8 @@ export class DashboardComponent implements OnInit {
     cap
     locality
     pr
+    http: any;
+    existingImageUrl: any;
 
     constructor(private router: Router, private fb: FormBuilder,private confirmationService : ConfirmationService, private messageService: MessageService, private brandService: BrandService, private userService: UserService, private service: ElabelService, public layoutService: LayoutService, private sanitizer: DomSanitizer) {
 
@@ -184,11 +186,43 @@ export class DashboardComponent implements OnInit {
         })
     }
 
+    // Function to handle file selection
     onSelect(e: FileSelectEvent) {
+        // Log the file upload event to the console for debugging
         console.log('FileUploadEvent', e);
-        this.imageFile =e.files[0];
+
+        // Assign the first selected file to the class property `imageFile`
+        // Ensure that e.files is an array and contains at least one file
+        this.imageFile = e.files[0];
     }
 
+    // Function to upload the selected image file
+    uploadImage() {
+        // Check if an image file has been selected
+        if (!this.imageFile) {
+            console.error('No image file selected');
+            return; // Exit the function if no file is selected
+        }
+
+        // Create a new FormData object to handle file upload
+        const formData = new FormData();
+        
+        // Append the image file to the FormData object with the field name 'image'
+        formData.append('image', this.imageFile);
+
+        // Send the FormData object to the backend via an HTTP POST request
+        this.http.post('/upload-endpoint', formData).subscribe(
+            (response) => {
+                // Handle the successful upload response
+                console.log('Upload successful', response);
+            },
+            (error) => {
+                // Handle any errors that occur during the upload
+                console.error('Upload failed', error);
+            }
+        );
+    }
+    
     imageCropped(event: any) {
         const imageUrl = event.objectUrl || event.base64 || '';
         this.croppedImage = this.sanitizer.bypassSecurityTrustUrl(imageUrl);
@@ -284,12 +318,14 @@ export class DashboardComponent implements OnInit {
     editBrand(id) {
         this.step = 0;
         this.brandService.get(id).subscribe((response) => {
-            this.form.patchValue(response.data)
-            this.name.setValue(response.data.name)
-            this.brandModal = true
-        })
+            const brandData = response.data;
+            this.form.patchValue(brandData);
+            this.name.setValue(brandData.name);
+            this.existingImageUrl = brandData.imageUrl; // Assuming `imageUrl` is the URL of the existing image
+            this.brandModal = true;
+        });
     }
-
+    
     createElabelByBrand(el: any) {
         this.service.create({
             'public_id': this.id.value,
@@ -365,7 +401,4 @@ export class DashboardComponent implements OnInit {
           }
         });
     }
-    
-
-
 }

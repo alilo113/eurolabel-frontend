@@ -6,6 +6,9 @@ import { baseUrl } from './constant';
   providedIn: 'root'
 })
 export class BrandService {
+  deleteBrand(id: any) {
+      throw new Error('Method not implemented.');
+  }
 
   constructor(private http: HttpClient) { }
 
